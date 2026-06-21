@@ -1,43 +1,60 @@
-import { createContext, useState } from 'react';
+import { createContext, useState, useEffect } from 'react';
 import axios from 'axios';
-import { toast } from 'react-toastify'; 
-import { useEffect } from 'react';
-import 'react-toastify/dist/ReactToastify.css';
-import { useNavigate } from 'react-router-dom';
+import { toast } from 'react-toastify';
 
 export const AppContext = createContext();
 
 export const AppContextProvider = (props) => {
 
-    axios.defaults.withCredentials = true;
-
     const backendUrl = import.meta.env.VITE_BACKEND_URL;
 
     const [isLoggedin, setIsLoggedin] = useState(false);
-    const [userData, setUserData] = useState(false);
+    const [userData, setUserData] = useState(null);
 
+    // 🔥 AXIOS INSTANCE WITH TOKEN
+    const api = axios.create({
+        baseURL: backendUrl
+    });
+
+    // 🔥 attach token automatically
+    api.interceptors.request.use((config) => {
+        const token = localStorage.getItem("token");
+
+        if (token) {
+            config.headers.Authorization = `Bearer ${token}`;
+        }
+
+        return config;
+    });
+
+    // 🔥 check auth
     const getAuthState = async () => {
         try {
-            const { data } = await axios.get(backendUrl + '/api/auth/is-auth', { withCredentials: true });
-            setIsLoggedin(data.success);
+            const { data } = await api.get('/api/auth/is-auth');
+
+            setIsLoggedin(true);
             getUserData();
+
+        } catch (err) {
+            setIsLoggedin(false);
+        }
+    };
+
+    // 🔥 get user data
+    const getUserData = async () => {
+        try {
+            const { data } = await api.get('/api/user/data');
+
+            if (data.success) {
+                setUserData(data.userData);
+            } else {
+                toast.error(data.message);
+            }
+
         } catch (err) {
             toast.error(err.message);
         }
     };
-
-    axios.defaults.withCredentials = true;
-
-    const getUserData = async () => {
-        try {
-            const {data} = await axios.get(backendUrl + '/api/user/data', { withCredentials: true });
-            
-            data.success ? setUserData(data.userData) : toast.error(data.message)
-        }catch (err) {
-            toast.error(err.message);
-        }
-
-    }
 
     useEffect(() => {
         getAuthState();
@@ -49,7 +66,8 @@ export const AppContextProvider = (props) => {
         setIsLoggedin,
         userData,
         setUserData,
-        getUserData
+        getUserData,
+        api // 🔥 IMPORTANT EXPORT
     };
 
     return (
