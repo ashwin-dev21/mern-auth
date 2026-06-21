@@ -1,35 +1,54 @@
 import jwt from 'jsonwebtoken';
 import dotenv from 'dotenv';
-dotenv.config();    
+
+dotenv.config();
 
 const userAuth = (req, res, next) => {
-     console.log("Cookies:", req.cookies);
-    console.log("Token:", req.cookies.token);
-
-
-    const { token } = req.cookies;
-
-    if (!token) {
-        return res.status(401).json({ message: 'Unauthorized' });
-    }
-
     try {
+        //  Get token from Authorization header
+        const authHeader = req.headers.authorization;
 
-        const tokenDecode = jwt.verify(token, process.env.JWT_SECRET);
+        console.log("Auth Header:", authHeader);
 
-        if (tokenDecode.userId) {
-
-            req.userId = tokenDecode.userId;
-
-            next();
-
-        } else {
-            return res.status(401).json({ message: 'Unauthorized' });
+        if (!authHeader) {
+            return res.status(401).json({
+                success: false,
+                message: 'Unauthorized: No token provided'
+            });
         }
 
-    } catch (error) {
+        // Format: "Bearer <token>"
+        const token = authHeader.split(' ')[1];
 
-        return res.status(401).json({ message: 'Invalid token' });
+        console.log("Token:", token);
+
+        if (!token) {
+            return res.status(401).json({
+                success: false,
+                message: 'Unauthorized: Invalid token format'
+            });
+        }
+
+        // 🔐 Verify token
+        const decoded = jwt.verify(token, process.env.JWT_SECRET);
+
+        if (!decoded.userId) {
+            return res.status(401).json({
+                success: false,
+                message: 'Unauthorized: Invalid token'
+            });
+        }
+
+        //  Attach userId to request
+        req.userId = decoded.userId;
+
+        next();
+
+    } catch (error) {
+        return res.status(401).json({
+            success: false,
+            message: 'Unauthorized: Token invalid or expired'
+        });
     }
 };
 
