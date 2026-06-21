@@ -10,6 +10,9 @@ const app = express();
 const PORT = process.env.PORT || 4000;
 connectDB();
 
+// Add this line to trust Render's proxy setup
+app.set('trust proxy', 1);
+
 // const allowedOrigins = [''];
 
 app.use(express.json());
