@@ -8,7 +8,7 @@ export const AppContextProvider = (props) => {
 
     const backendUrl = import.meta.env.VITE_BACKEND_URL;
 
-    const [isLoggedin, setIsLoggedin] = useState(false);
+    const [isLoggedIn, setIsLoggedIn] = useState(false);
     const [userData, setUserData] = useState(null);
 
     // 🔥 AXIOS INSTANCE WITH TOKEN
@@ -32,11 +32,11 @@ export const AppContextProvider = (props) => {
         try {
             const { data } = await api.get('/api/auth/is-auth');
 
-            setIsLoggedin(true);
+            setIsLoggedIn(true);
             getUserData();
 
         } catch (err) {
-            setIsLoggedin(false);
+            setIsLoggedIn(false);
         }
     };
 
@@ -60,15 +60,15 @@ export const AppContextProvider = (props) => {
         getAuthState();
     }, []);
 
-    const value = {
-        backendUrl,
-        isLoggedin,
-        setIsLoggedin,
-        userData,
-        setUserData,
-        getUserData,
-        api // 🔥 IMPORTANT EXPORT
-    };
+   const value = {
+    backendUrl,
+    api,
+    isLoggedIn,
+    setIsLoggedIn,
+    userData,
+    setUserData,
+    getUserData
+};
 
     return (
         <AppContext.Provider value={value}>

@@ -3,12 +3,16 @@ import { assets } from '../assets/assets.js';
 import { useNavigate } from 'react-router-dom';
 import { AppContext } from '../context/AppContext.jsx';
 import { toast } from 'react-toastify';
-import axios from 'axios';
 
 const Login = () => {
 
   const navigate = useNavigate();
-  const { backendUrl, setIsLoggedin, getUserData } = useContext(AppContext);
+ const {
+    api,
+    isLoggedin,
+    userData,
+    getUserData
+} = useContext(AppContext);
 
   const [state, setState] = useState('Sign Up');
   const [name, setName] = useState('');
@@ -21,8 +25,7 @@ const Login = () => {
     try {
       if (state === 'Sign Up') {
 
-        const { data } = await axios.post(
-          backendUrl + '/api/auth/register',
+        const { data } = await api.post("/api/auth/register",
           { name, email, password }
         );
 
@@ -40,8 +43,7 @@ const Login = () => {
 
       } else {
 
-        const { data } = await axios.post(
-          backendUrl + '/api/auth/login',
+        const { data } = await api.post("/api/auth/login",
           { email, password }
         );
 

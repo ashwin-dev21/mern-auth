@@ -1,4 +1,4 @@
-import React, { use, useEffect } from 'react'
+import { use, useEffect } from 'react'
 import {assets} from '../assets/assets.js'
 import { useNavigate } from 'react-router-dom'
 import { useContext } from 'react'
@@ -13,9 +13,13 @@ import { useState } from 'react'
 
 const EmailVerify = () => {
 
-  axios.defaults.withCredentials = true;
 
-  const {backendUrl, isLoggedIn, userData, getUserData} = useContext(AppContext);
+  const {
+    api,
+    isLoggedin,
+    userData,
+    getUserData
+} = useContext(AppContext);
 
   const navigate = useNavigate();
 
@@ -49,7 +53,10 @@ const EmailVerify = () => {
       const otpArray = inputRefs.current.map(e => e.value);
       const otp = otpArray.join('');
 
-      const {data} = await axios.post('/api/auth/verify-account', {otp});
+      const { data } = await api.post(
+    "/api/auth/verify-account",
+    { otp }
+);
       if(data.success) {
         toast.success(data.message);
         getUserData();
@@ -64,8 +71,8 @@ const EmailVerify = () => {
   }
 
   useEffect(() => {
-    isLoggedIn && userData && userData.isAccountVerified && navigate('/') 
-  }, [isLoggedIn, userData]);
+    isLoggedin && userData && userData.isAccountVerified && navigate('/') 
+  }, [isLoggedin, userData]);
 
   return (
     <div className='flex items-center justify-center min-h-screen
