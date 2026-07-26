@@ -7,9 +7,10 @@ import { toast } from 'react-toastify';
 const Login = () => {
 
   const navigate = useNavigate();
- const {
+const {
     api,
-    isLoggedin,
+    isLoggedIn,
+    setIsLoggedIn,
     userData,
     getUserData
 } = useContext(AppContext);
@@ -32,7 +33,7 @@ const Login = () => {
         if (data.success) {
           localStorage.setItem("token", data.token);
 
-          setIsLoggedin(true);
+          setIsLoggedIn(true);
           getUserData();
 
           toast.success("Account created");
@@ -50,7 +51,7 @@ const Login = () => {
         if (data.success) {
           localStorage.setItem("token", data.token);
 
-          setIsLoggedin(true);
+          setIsLoggedIn(true);
           getUserData();
 
           toast.success("Login successful");

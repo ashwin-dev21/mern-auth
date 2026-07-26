@@ -14,12 +14,14 @@ import { useState } from 'react'
 const EmailVerify = () => {
 
 
-  const {
+const {
     api,
-    isLoggedin,
+    isLoggedIn,
+    setIsLoggedIn,
     userData,
     getUserData
 } = useContext(AppContext);
+
 
   const navigate = useNavigate();
 
@@ -71,8 +73,8 @@ const EmailVerify = () => {
   }
 
   useEffect(() => {
-    isLoggedin && userData && userData.isAccountVerified && navigate('/') 
-  }, [isLoggedin, userData]);
+    isLoggedIn && userData && userData.isAccountVerified && navigate('/') 
+  }, [isLoggedIn, userData]);
 
   return (
     <div className='flex items-center justify-center min-h-screen

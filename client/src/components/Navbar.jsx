@@ -9,7 +9,7 @@ const Navbar = () => {
 
   const {
     userData,
-    setIsLoggedin,
+    setIsLoggedIn,
     setUserData,
     api,
   } = useContext(AppContext);
@@ -35,7 +35,7 @@ const Navbar = () => {
 
       if (data.success) {
         localStorage.removeItem("token");
-        setIsLoggedin(false);
+        setIsLoggedIn(false);
         setUserData(null);
 
         toast.success(data.message);
