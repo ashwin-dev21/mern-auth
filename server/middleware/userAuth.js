@@ -17,29 +17,17 @@ const userAuth = (req, res, next) => {
             });
         }
 
-        // Format: "Bearer <token>"
-        const token = authHeader.split(' ')[1];
-
-        console.log("Token:", token);
+ 
+        const token = req.cookies.token;
 
         if (!token) {
             return res.status(401).json({
                 success: false,
-                message: 'Unauthorized: Invalid token format'
+                message: "Unauthorized"
             });
         }
 
-        // 🔐 Verify token
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
-
-        if (!decoded.userId) {
-            return res.status(401).json({
-                success: false,
-                message: 'Unauthorized: Invalid token'
-            });
-        }
-
-        //  Attach userId to request
         req.userId = decoded.userId;
 
         next();

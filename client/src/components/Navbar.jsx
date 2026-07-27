@@ -61,12 +61,12 @@ const Navbar = () => {
           {userData.name[0].toUpperCase()}
 
           <div className="absolute hidden group-hover:block top-0 right-0 pt-10 z-10">
-            <ul className="bg-gray-100 text-sm rounded shadow-lg">
+            <ul className="bg-gray-700 text-sm rounded shadow-lg">
 
               {!userData.isAccountVerified && (
                 <li
                   onClick={sendVerificationOtp}
-                  className="py-2 px-4 hover:bg-gray-200 cursor-pointer"
+                  className="py-2 px-4 hover:bg-gray-600 cursor-pointer"
                 >
                   Verify Email
                 </li>
@@ -74,7 +74,7 @@ const Navbar = () => {
 
               <li
                 onClick={logout}
-                className="py-2 px-4 hover:bg-gray-200 cursor-pointer"
+                className="py-2 px-4 hover:bg-gray-600 cursor-pointer"
               >
                 Logout
               </li>
