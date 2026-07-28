@@ -31,13 +31,15 @@ const {
         );
 
         if (data.success) {
-          localStorage.setItem("token", data.token);
+          
 
-          setIsLoggedIn(true);
-          getUserData();
+        setIsLoggedIn(true);
 
-          toast.success("Account created");
-          navigate('/');
+        await getUserData();
+
+        toast.success("Account created successfully");
+
+        navigate("/");
         } else {
           toast.error(data.message);
         }
@@ -49,13 +51,15 @@ const {
         );
 
         if (data.success) {
-          localStorage.setItem("token", data.token);
+          
 
           setIsLoggedIn(true);
-          getUserData();
+
+          await getUserData();
 
           toast.success("Login successful");
-          navigate('/');
+
+          navigate("/");
         } else {
           toast.error(data.message);
         }

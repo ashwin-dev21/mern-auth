@@ -34,7 +34,7 @@ const Navbar = () => {
       const { data } = await api.post("/api/auth/logout");
 
       if (data.success) {
-        localStorage.removeItem("token");
+        
         setIsLoggedIn(false);
         setUserData(null);
 

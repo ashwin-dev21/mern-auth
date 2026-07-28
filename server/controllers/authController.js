@@ -13,7 +13,7 @@ export const register = async (req, res) => {
     if (!name || !email || !password) {
         return res.status(400).json({
             success: false,
-            message: 'Please provide name, email and password'
+            message: "Please provide name, email and password"
         });
     }
 
@@ -23,35 +23,34 @@ export const register = async (req, res) => {
         if (existingUser) {
             return res.status(400).json({
                 success: false,
-                message: 'User already exists'
+                message: "User already exists"
             });
         }
 
         const hashedPassword = await bcrypt.hash(password, 10);
 
-        const user = new userModel({
+        const user = await userModel.create({
             name,
             email,
             password: hashedPassword
         });
 
-        await user.save();
-
         const token = jwt.sign(
             { userId: user._id },
             process.env.JWT_SECRET,
-            { expiresIn: '7d' }
+            { expiresIn: "7d" }
         );
 
-        // 🚀 RETURN TOKEN IN RESPONSE (NO COOKIE)
+        res.cookie("token", token, {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === "production",
+            sameSite: process.env.NODE_ENV === "production" ? "None" : "Lax",
+            maxAge: 7 * 24 * 60 * 60 * 1000,
+        });
+
         return res.status(201).json({
             success: true,
-            token,
-            user: {
-                id: user._id,
-                name: user.name,
-                email: user.email
-            }
+            message: "Account created successfully"
         });
 
     } catch (error) {
@@ -72,7 +71,7 @@ export const login = async (req, res) => {
     if (!email || !password) {
         return res.status(400).json({
             success: false,
-            message: 'Please provide email and password'
+            message: "Please provide email and password"
         });
     }
 
@@ -82,7 +81,7 @@ export const login = async (req, res) => {
         if (!user) {
             return res.status(400).json({
                 success: false,
-                message: 'Invalid email or password'
+                message: "Invalid email or password"
             });
         }
 
@@ -91,21 +90,26 @@ export const login = async (req, res) => {
         if (!isMatch) {
             return res.status(400).json({
                 success: false,
-                message: 'Invalid email or password'
+                message: "Invalid email or password"
             });
         }
 
         const token = jwt.sign(
             { userId: user._id },
             process.env.JWT_SECRET,
-            { expiresIn: '7d' }
+            { expiresIn: "7d" }
         );
 
-        // 🚀 SEND TOKEN TO FRONTEND
+        res.cookie("token", token, {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === "production",
+            sameSite: process.env.NODE_ENV === "production" ? "None" : "Lax",
+            maxAge: 7 * 24 * 60 * 60 * 1000,
+        });
+
         return res.status(200).json({
             success: true,
-            token,
-            message: 'Login successful'
+            message: "Login successful"
         });
 
     } catch (error) {
@@ -122,10 +126,18 @@ export const login = async (req, res) => {
 ========================= */
 export const logout = (req, res) => {
     try {
+
+        res.clearCookie("token", {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === "production",
+            sameSite: process.env.NODE_ENV === "production" ? "None" : "Lax",
+        });
+
         return res.status(200).json({
             success: true,
-            message: 'Logout successful (remove token from localStorage)'
+            message: "Logged out successfully"
         });
+
     } catch (error) {
         return res.status(500).json({
             success: false,

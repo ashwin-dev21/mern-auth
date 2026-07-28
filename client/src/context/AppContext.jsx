@@ -12,28 +12,18 @@ export const AppContextProvider = (props) => {
     const [userData, setUserData] = useState(null);
 
     // 🔥 AXIOS INSTANCE WITH TOKEN
-    const api = axios.create({
-        baseURL: backendUrl
-    });
-
-    // 🔥 attach token automatically
-    api.interceptors.request.use((config) => {
-        const token = localStorage.getItem("token");
-
-        if (token) {
-            config.headers.Authorization = `Bearer ${token}`;
-        }
-
-        return config;
-    });
+   const api = axios.create({
+    baseURL: backendUrl,
+    withCredentials: true,
+});
 
     // 🔥 check auth
     const getAuthState = async () => {
         try {
             const { data } = await api.get('/api/auth/is-auth');
 
-            setIsLoggedIn(true);
-            getUserData();
+                setIsLoggedIn(true);
+                await getUserData();
 
         } catch (err) {
             setIsLoggedIn(false);
