@@ -38,6 +38,7 @@ const userAuth = (req, res, next) => {
             message: "Unauthorized: Token expired or invalid"
         });
     }
+    console.log("Cookies:", req.cookies);
 };
 
 export default userAuth;
