@@ -2,6 +2,7 @@ import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import userModel from '../models/userModel.js';
 import dotenv from 'dotenv/config';
+import axios from "axios";
 import transporter from '../config/nodemailer.js';
 
 /* =========================
@@ -152,54 +153,85 @@ export const logout = (req, res) => {
 ========================= */
 export const sendVerifyOtp = async (req, res) => {
     try {
-        const userId = req.userId;
+        console.log("🔥 SEND VERIFY OTP START");
+        console.log("User ID:", req.userId);
 
-        const user = await userModel.findById(userId);
+        const user = await userModel.findById(req.userId);
 
         if (!user) {
             return res.status(404).json({
                 success: false,
-                message: 'User not found'
+                message: "User not found"
             });
         }
 
         if (user.isAccountVerified) {
             return res.status(400).json({
                 success: false,
-                message: 'Account already verified'
+                message: "Account already verified"
             });
         }
 
-        const otp = Math.floor(100000 + Math.random() * 900000).toString();
+        const otp = Math.floor(
+            100000 + Math.random() * 900000
+        ).toString();
 
         user.verifyOtp = otp;
-        user.verifyOtpExpiryAt = Date.now() + 24 * 60 * 60 * 1000;
+
+        user.verifyOtpExpiryAt =
+            Date.now() + 24 * 60 * 60 * 1000;
 
         await user.save();
 
-        await transporter.sendMail({
-            from: process.env.SENDER_EMAIL,
-            to: user.email,
-            subject: 'Account Verification OTP',
-            text: `Your OTP is ${otp}. It is valid for 24 hours.`
-        });
+        console.log("🔥 OTP saved");
+
+        // Send email using Brevo HTTP API
+        await axios.post(
+            "https://api.brevo.com/v3/smtp/email",
+            {
+                sender: {
+                    email: process.env.SENDER_EMAIL
+                },
+                to: [
+                    {
+                        email: user.email
+                    }
+                ],
+                subject: "Account Verification OTP",
+                textContent:
+                    `Your OTP is ${otp}. It is valid for 24 hours.`
+            },
+            {
+                headers: {
+                    "api-key": process.env.BREVO_API_KEY,
+                    "Content-Type": "application/json",
+                    "Accept": "application/json"
+                }
+            }
+        );
+
+        console.log("✅ EMAIL SENT");
 
         return res.status(200).json({
             success: true,
-            message: 'OTP sent to email'
+            message: "OTP sent to email"
         });
 
     } catch (error) {
-    console.error("sendVerifyOtp Error:", error);
+        console.error("❌ SEND VERIFY OTP ERROR:");
 
-    return res.status(500).json({
-        success: false,
-        message: error.message
-    });
-}
+        console.error(
+            error.response?.data || error.message
+        );
+
+        return res.status(500).json({
+            success: false,
+            message:
+                error.response?.data?.message ||
+                error.message
+        });
+    }
 };
-
-
 /* =========================
    VERIFY EMAIL
 ========================= */
