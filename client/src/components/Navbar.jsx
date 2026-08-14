@@ -1,4 +1,4 @@
-import React, { useContext } from "react";
+import React, { useContext, useState } from "react";
 import { assets } from "../assets/assets.js";
 import { useNavigate } from "react-router-dom";
 import { AppContext } from "../context/AppContext.jsx";
@@ -14,19 +14,41 @@ const Navbar = () => {
     api,
   } = useContext(AppContext);
 
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+
   const sendVerificationOtp = async () => {
+    console.log("🔥 VERIFY EMAIL CLICKED");
+
     try {
+      console.log("🔥 Calling send-verify-otp API...");
+
       const { data } = await api.post("/api/auth/send-verify-otp");
+
+      console.log("🔥 API RESPONSE:", data);
 
       if (data.success) {
         toast.success(data.message);
+
+        setIsMenuOpen(false);
+
         navigate("/email-verify");
       } else {
         toast.error(data.message);
       }
+
     } catch (err) {
-      toast.error(err.response?.data?.message || err.message);
-    }
+    console.error(" SEND OTP ERROR:", err);
+
+    console.log(" STATUS:", err.response?.status);
+    console.log(" SERVER RESPONSE:", err.response?.data);
+    console.log(" HEADERS:", err.response?.headers);
+
+    toast.error(
+        err.response?.data?.message ||
+        err.message ||
+        "Something went wrong"
+    );
+}
   };
 
   const logout = async () => {
@@ -34,21 +56,34 @@ const Navbar = () => {
       const { data } = await api.post("/api/auth/logout");
 
       if (data.success) {
-        
         setIsLoggedIn(false);
         setUserData(null);
+        setIsMenuOpen(false);
 
         toast.success(data.message);
 
         navigate("/");
       }
+
     } catch (err) {
-      toast.error(err.response?.data?.message || err.message);
-    }
+    console.error(" SEND OTP ERROR:", err);
+
+    console.log(" STATUS:", err.response?.status);
+    console.log(" SERVER RESPONSE:", err.response?.data);
+    console.log(" HEADERS:", err.response?.headers);
+
+    toast.error(
+        err.response?.data?.message ||
+        err.message ||
+        "Something went wrong"
+    );
+}
   };
 
   return (
-    <div className="w-full flex items-center justify-between p-4 sm:p-6 sm:px-24 absolute top-0">
+    <div className="w-full flex items-center justify-between px-5 py-4 sm:px-10 md:px-16 lg:px-24 absolute top-0 z-50">
+
+      {/* LOGO */}
       <img
         src={assets.logo}
         alt="logo"
@@ -56,41 +91,114 @@ const Navbar = () => {
         onClick={() => navigate("/")}
       />
 
+      {/* USER MENU */}
       {userData ? (
-        <div className="w-8 h-8 flex justify-center items-center rounded-full bg-black text-white relative group">
-          {userData.name[0].toUpperCase()}
+        <div className="relative">
 
-          <div className="absolute hidden group-hover:block top-0 right-0 pt-10 z-10">
-            <ul className="bg-gray-700 text-sm rounded shadow-lg">
+          {/* PROFILE BUTTON */}
+          <button
+            type="button"
+            onClick={() => setIsMenuOpen(!isMenuOpen)}
+            className="w-10 h-10 sm:w-11 sm:h-11 flex justify-center items-center rounded-full bg-black text-white font-medium cursor-pointer hover:bg-gray-800 transition"
+          >
+            {userData.name?.[0]?.toUpperCase()}
+          </button>
 
+          {/* DROPDOWN */}
+          {isMenuOpen && (
+            <div
+              className="
+                absolute
+                right-0
+                top-12
+                sm:top-14
+                w-44
+                sm:w-48
+                bg-gray-700
+                rounded-lg
+                shadow-xl
+                overflow-hidden
+                z-999
+              "
+            >
+
+              {/* VERIFY EMAIL */}
               {!userData.isAccountVerified && (
-                <li
+                <button
+                  type="button"
                   onClick={sendVerificationOtp}
-                  className="py-2 px-4 hover:bg-gray-600 cursor-pointer"
+                  className="
+                    block
+                    w-full
+                    text-left
+                    px-4
+                    py-3
+                    text-white
+                    hover:bg-gray-600
+                    active:bg-gray-500
+                    cursor-pointer
+                    transition
+                  "
                 >
                   Verify Email
-                </li>
+                </button>
               )}
 
-              <li
+              {/* LOGOUT */}
+              <button
+                type="button"
                 onClick={logout}
-                className="py-2 px-4 hover:bg-gray-600 cursor-pointer"
+                className="
+                  block
+                  w-full
+                  text-left
+                  px-4
+                  py-3
+                  text-white
+                  hover:bg-gray-600
+                  active:bg-gray-500
+                  cursor-pointer
+                  transition
+                "
               >
                 Logout
-              </li>
+              </button>
 
-            </ul>
-          </div>
+            </div>
+          )}
+
         </div>
       ) : (
+
+        /* LOGIN BUTTON */
         <button
+          type="button"
           onClick={() => navigate("/login")}
-          className="flex items-center gap-2 border border-gray-800 px-4 py-2 rounded-full text-gray-600 hover:bg-gray-100"
+          className="
+            flex
+            items-center
+            gap-2
+            border
+            border-gray-800
+            px-4
+            py-2
+            rounded-full
+            text-gray-600
+            hover:bg-gray-100
+            transition
+          "
         >
           Login
-          <img src={assets.arrow_icon} alt="" />
+
+          <img
+            src={assets.arrow_icon}
+            alt=""
+            className="w-4"
+          />
         </button>
+
       )}
+
     </div>
   );
 };
