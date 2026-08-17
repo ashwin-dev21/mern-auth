@@ -188,6 +188,8 @@ export const sendVerifyOtp = async (req, res) => {
         await user.save();
 
         console.log("🔥 OTP saved");
+        console.log("BREVO API KEY EXISTS:", !!process.env.BREVO_API_KEY);
+        console.log("SENDER EMAIL:", process.env.SENDER_EMAIL);
 
         // Send email using Brevo HTTP API
         await axios.post(

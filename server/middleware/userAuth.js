@@ -4,8 +4,6 @@ const userAuth = async (req, res, next) => {
     try {
         const token = req.cookies.token;
 
-        console.log("COOKIE TOKEN:", token ? "FOUND" : "NOT FOUND");
-
         if (!token) {
             return res.status(401).json({
                 success: false,
@@ -13,20 +11,14 @@ const userAuth = async (req, res, next) => {
             });
         }
 
-        const decoded = jwt.verify(
-            token,
-            process.env.JWT_SECRET
-        );
-
-        console.log("TOKEN VERIFIED");
-        console.log("USER ID:", decoded.userId);
+        const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
         req.userId = decoded.userId;
 
         next();
 
     } catch (error) {
-        console.error(" AUTH ERROR:", error.message);
+        console.log("AUTH MIDDLEWARE ERROR:", error.message);
 
         return res.status(401).json({
             success: false,

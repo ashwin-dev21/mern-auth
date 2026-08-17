@@ -20,7 +20,7 @@ app.use(cookieParser());
 app.use(cors({
      origin: [
     "http://localhost:5173",
-    "https://mern-auth-gamma-three.vercel.app"
+    "http://localhost:4000",
   ],
     credentials: true
 }));
