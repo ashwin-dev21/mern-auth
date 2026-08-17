@@ -1,44 +1,38 @@
 import jwt from "jsonwebtoken";
-import dotenv from "dotenv";
 
-dotenv.config();
-
-const userAuth = (req, res, next) => {
+const userAuth = async (req, res, next) => {
     try {
-        // Get token from cookie
         const token = req.cookies.token;
+
+        console.log("COOKIE TOKEN:", token ? "FOUND" : "NOT FOUND");
 
         if (!token) {
             return res.status(401).json({
                 success: false,
-                message: "🔥 COOKIE AUTH VERSION 2026"
+                message: "Authentication token not found"
             });
         }
 
-        // Verify token
-        const decoded = jwt.verify(token, process.env.JWT_SECRET);
+        const decoded = jwt.verify(
+            token,
+            process.env.JWT_SECRET
+        );
 
-        if (!decoded.userId) {
-            return res.status(401).json({
-                success: false,
-                message: "Unauthorized: Invalid token"
-            });
-        }
+        console.log("TOKEN VERIFIED");
+        console.log("USER ID:", decoded.userId);
 
-        // Attach userId to request
         req.userId = decoded.userId;
 
         next();
 
     } catch (error) {
-        console.error("userAuth Error:", error);
+        console.error(" AUTH ERROR:", error.message);
 
         return res.status(401).json({
             success: false,
-            message: "Unauthorized: Token expired or invalid"
+            message: "Invalid or expired authentication token"
         });
     }
-    console.log("Cookies:", req.cookies);
 };
 
 export default userAuth;

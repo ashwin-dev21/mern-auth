@@ -11,26 +11,28 @@ export const AppContextProvider = (props) => {
     const [isLoggedIn, setIsLoggedIn] = useState(false);
     const [userData, setUserData] = useState(null);
 
-    // 🔥 AXIOS INSTANCE WITH TOKEN
-   const api = axios.create({
-    baseURL: backendUrl,
-    withCredentials: true,
-});
+    const api = axios.create({
+        baseURL: backendUrl,
+        withCredentials: true
+    });
 
-    // 🔥 check auth
     const getAuthState = async () => {
         try {
             const { data } = await api.get('/api/auth/is-auth');
 
+            if (data.success) {
                 setIsLoggedIn(true);
                 await getUserData();
+            } else {
+                setIsLoggedIn(false);
+            }
 
-        } catch (err) {
+        } catch (error) {
+            console.log("AUTH CHECK ERROR:", error.response?.data || error.message);
             setIsLoggedIn(false);
         }
     };
 
-    // 🔥 get user data
     const getUserData = async () => {
         try {
             const { data } = await api.get('/api/user/data');
@@ -41,8 +43,11 @@ export const AppContextProvider = (props) => {
                 toast.error(data.message);
             }
 
-        } catch (err) {
-            toast.error(err.message);
+        } catch (error) {
+            console.log(
+                "GET USER DATA ERROR:",
+                error.response?.data || error.message
+            );
         }
     };
 
@@ -50,15 +55,15 @@ export const AppContextProvider = (props) => {
         getAuthState();
     }, []);
 
-   const value = {
-    backendUrl,
-    api,
-    isLoggedIn,
-    setIsLoggedIn,
-    userData,
-    setUserData,
-    getUserData
-};
+    const value = {
+        backendUrl,
+        api,
+        isLoggedIn,
+        setIsLoggedIn,
+        userData,
+        setUserData,
+        getUserData
+    };
 
     return (
         <AppContext.Provider value={value}>

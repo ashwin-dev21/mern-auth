@@ -42,11 +42,13 @@ export const register = async (req, res) => {
             { expiresIn: "7d" }
         );
 
+        const isProduction = process.env.NODE_ENV === "production";
+
         res.cookie("token", token, {
             httpOnly: true,
-            secure: true,
-            sameSite: "None",
-            maxAge: 7 * 24 * 60 * 60 * 1000,
+            secure: isProduction,
+            sameSite: isProduction ? "None" : "Lax",
+            maxAge: 7 * 24 * 60 * 60 * 1000
         });
 
         return res.status(201).json({
@@ -101,13 +103,14 @@ export const login = async (req, res) => {
             { expiresIn: "7d" }
         );
 
+        const isProduction = process.env.NODE_ENV === "production";
+
         res.cookie("token", token, {
             httpOnly: true,
-            secure: true,
-            sameSite: "None",
-            maxAge: 7 * 24 * 60 * 60 * 1000,
+            secure: isProduction,
+            sameSite: isProduction ? "None" : "Lax",
+            maxAge: 7 * 24 * 60 * 60 * 1000
         });
-
         return res.status(200).json({
             success: true,
             message: "Login successful"
@@ -128,10 +131,12 @@ export const login = async (req, res) => {
 export const logout = (req, res) => {
     try {
 
+        const isProduction = process.env.NODE_ENV === "production";
+
         res.clearCookie("token", {
             httpOnly: true,
-            secure: process.env.NODE_ENV === "production",
-            sameSite: process.env.NODE_ENV === "production" ? "None" : "Lax",
+            secure: isProduction,
+            sameSite: isProduction ? "None" : "Lax"
         });
 
         return res.status(200).json({
@@ -146,7 +151,6 @@ export const logout = (req, res) => {
         });
     }
 };
-
 
 /* =========================
    SEND VERIFY OTP
