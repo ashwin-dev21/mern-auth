@@ -3,6 +3,7 @@ import { assets } from "../assets/assets.js";
 import { useNavigate } from "react-router-dom";
 import { AppContext } from "../context/AppContext.jsx";
 import { toast } from "react-toastify";
+import axios from "axios";
 
 const Navbar = () => {
   const navigate = useNavigate();
@@ -17,43 +18,49 @@ const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   const sendVerificationOtp = async () => {
-    console.log("🔥 VERIFY EMAIL CLICKED");
+    console.log("VERIFY EMAIL CLICKED");
 
     try {
-      console.log("🔥 Calling send-verify-otp API...");
+      console.log("Calling send-verify-otp API...");
 
-      const { data } = await api.post("/api/auth/send-verify-otp");
+      // ✅ FIX: Passed {} as body instead of 'data'
+      const { data } = await axios.post(
+        'http://localhost:4000/api/send-verify-otp',
+        {},
+        { withCredentials: true }
+      );
 
-      console.log("🔥 API RESPONSE:", data);
+      console.log("API RESPONSE:", data);
 
       if (data.success) {
         toast.success(data.message);
-
         setIsMenuOpen(false);
-
         navigate("/email-verify");
       } else {
         toast.error(data.message);
       }
 
     } catch (err) {
-    console.error(" SEND OTP ERROR:", err);
+      console.error("SEND OTP ERROR:", err);
+      console.log("STATUS:", err.response?.status);
+      console.log("SERVER RESPONSE:", err.response?.data);
+      console.log("HEADERS:", err.response?.headers);
 
-    console.log(" STATUS:", err.response?.status);
-    console.log(" SERVER RESPONSE:", err.response?.data);
-    console.log(" HEADERS:", err.response?.headers);
-
-    toast.error(
+      toast.error(
         err.response?.data?.message ||
         err.message ||
         "Something went wrong"
-    );
-}
+      );
+    }
   };
 
   const logout = async () => {
     try {
-      const { data } = await api.post("/api/auth/logout");
+      const { data } = await axios.post(
+        'http://localhost:4000/api/logout',
+        {},
+        { withCredentials: true }
+      );
 
       if (data.success) {
         setIsLoggedIn(false);
@@ -61,23 +68,18 @@ const Navbar = () => {
         setIsMenuOpen(false);
 
         toast.success(data.message);
-
         navigate("/");
       }
 
     } catch (err) {
-    console.error(" SEND OTP ERROR:", err);
+      console.error("LOGOUT ERROR:", err);
 
-    console.log(" STATUS:", err.response?.status);
-    console.log(" SERVER RESPONSE:", err.response?.data);
-    console.log(" HEADERS:", err.response?.headers);
-
-    toast.error(
+      toast.error(
         err.response?.data?.message ||
         err.message ||
         "Something went wrong"
-    );
-}
+      );
+    }
   };
 
   return (
