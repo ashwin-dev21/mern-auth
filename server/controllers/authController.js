@@ -2,7 +2,7 @@ import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import userModel from '../models/userModel.js';
 import dotenv from 'dotenv/config';
-import axios from "axios";
+import axios from 'axios';
 import transporter from '../config/nodemailer.js';
 
 /* =========================
@@ -44,11 +44,11 @@ export const register = async (req, res) => {
 
         const isProduction = process.env.NODE_ENV === "production";
 
-        res.cookie("token", token, {
+        res.cookie('token', token, {
             httpOnly: true,
-            secure: isProduction,
-            sameSite: isProduction ? "None" : "Lax",
-            maxAge: 7 * 24 * 60 * 60 * 1000
+            secure: process.env.NODE_ENV === 'production', // false in local dev
+            sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'strict',
+            maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
         });
 
         return res.status(201).json({
@@ -105,12 +105,12 @@ export const login = async (req, res) => {
 
         const isProduction = process.env.NODE_ENV === "production";
 
-        res.cookie("token", token, {
-            httpOnly: true,
-            secure: isProduction,
-            sameSite: isProduction ? "None" : "Lax",
-            maxAge: 7 * 24 * 60 * 60 * 1000
-        });
+        res.cookie('token', token, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production', // false in local dev
+        sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'strict',
+        maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
+    });
         return res.status(200).json({
             success: true,
             message: "Login successful"
@@ -128,15 +128,17 @@ export const login = async (req, res) => {
 /* =========================
    LOGOUT (frontend handles token removal)
 ========================= */
-export const logout = (req, res) => {
+export const logout = async (req, res) => {
     try {
-
         const isProduction = process.env.NODE_ENV === "production";
 
-        res.clearCookie("token", {
+        // 1. Use clearCookie instead of res.cookie
+        // 2. Pass 'token' as a string literal
+        // 3. Match the sameSite settings used during login ('lax' for local dev)
+        res.clearCookie('token', {
             httpOnly: true,
             secure: isProduction,
-            sameSite: isProduction ? "None" : "Lax"
+            sameSite: isProduction ? 'none' : 'lax',
         });
 
         return res.status(200).json({
@@ -151,91 +153,49 @@ export const logout = (req, res) => {
         });
     }
 };
-
 /* =========================
    SEND VERIFY OTP
 ========================= */
 export const sendVerifyOtp = async (req, res) => {
     try {
-        console.log("🔥 SEND VERIFY OTP START");
-        console.log("User ID:", req.userId);
+        // 1. Get userId (from req.body or your auth middleware)
+        const { userId } = req.body; 
 
-        const user = await userModel.findById(req.userId);
+        // 2. FETCH THE USER FIRST before using 'user' anywhere
+        const user = await userModel.findById(userId);
 
+        // 3. Check if user exists
         if (!user) {
-            return res.status(404).json({
-                success: false,
-                message: "User not found"
-            });
+            return res.json({ success: false, message: "User not found" });
         }
 
+        // 4. Check if already verified
         if (user.isAccountVerified) {
-            return res.status(400).json({
-                success: false,
-                message: "Account already verified"
-            });
+            return res.json({ success: false, message: "Account already verified" });
         }
 
-        const otp = Math.floor(
-            100000 + Math.random() * 900000
-        ).toString();
+        // 5. Generate OTP
+        const otp = String(Math.floor(100000 + Math.random() * 900000));
 
         user.verifyOtp = otp;
-
-        user.verifyOtpExpiryAt =
-            Date.now() + 24 * 60 * 60 * 1000;
+        user.verifyOtpExpireAt = Date.now() + 24 * 60 * 60 * 1000;
 
         await user.save();
 
-        console.log("🔥 OTP saved");
-        console.log("BREVO API KEY EXISTS:", !!process.env.BREVO_API_KEY);
-        console.log("SENDER EMAIL:", process.env.SENDER_EMAIL);
+        // 6. NOW you can use user.email safely!
+        const mailOptions = {
+            from: process.env.SENDER_EMAIL,
+            to: user.email,
+            subject: 'Account Verification OTP',
+            text: `Your OTP is ${otp}. Verify your account using this OTP.`,
+        };
 
-        // Send email using Brevo HTTP API
-        await axios.post(
-            "https://api.brevo.com/v3/smtp/email",
-            {
-                sender: {
-                    email: process.env.SENDER_EMAIL
-                },
-                to: [
-                    {
-                        email: user.email
-                    }
-                ],
-                subject: "Account Verification OTP",
-                textContent:
-                    `Your OTP is ${otp}. It is valid for 24 hours.`
-            },
-            {
-                headers: {
-                    "api-key": process.env.BREVO_API_KEY,
-                    "Content-Type": "application/json",
-                    "Accept": "application/json"
-                }
-            }
-        );
+        await transporter.sendMail(mailOptions);
 
-        console.log("✅ EMAIL SENT");
-
-        return res.status(200).json({
-            success: true,
-            message: "OTP sent to email"
-        });
+        return res.json({ success: true, message: 'Verification OTP Sent on Email' });
 
     } catch (error) {
-        console.error("❌ SEND VERIFY OTP ERROR:");
-
-        console.error(
-            error.response?.data || error.message
-        );
-
-        return res.status(500).json({
-            success: false,
-            message:
-                error.response?.data?.message ||
-                error.message
-        });
+        return res.json({ success: false, message: error.message });
     }
 };
 /* =========================

@@ -2,6 +2,9 @@ import { createContext, useState, useEffect } from 'react';
 import axios from 'axios';
 import { toast } from 'react-toastify';
 
+
+axios.defaults.withCredentials = true;
+
 export const AppContext = createContext();
 
 export const AppContextProvider = (props) => {
