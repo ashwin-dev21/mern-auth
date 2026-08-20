@@ -9,35 +9,39 @@ import userRouter from './routes/userRoutes.js';
 const app = express();
 const PORT = process.env.PORT || 4000;
 
-// Connect to MongoDB
 connectDB();
 
-// Trust Render's reverse proxy for secure cookie handling
 app.set('trust proxy', 1);
 
-// Configure dynamic CORS origins
+// Allowed origins list
 const allowedOrigins = [
   'http://localhost:5173',
   'http://localhost:4000',
-  process.env.CLIENT_URL // Deployed frontend URL from Render environment variables
+  process.env.CLIENT_URL,
+  'https://mern-auth-six-alpha.vercel.app' // Added directly as a fallback
 ].filter(Boolean);
 
 app.use(express.json());
 app.use(cookieParser());
+
+// Robust CORS Middleware configuration
 app.use(cors({
-  origin: allowedOrigins,
-  credentials: true
+  origin: function (origin, callback) {
+    // Allow requests with no origin (like mobile apps, curl, Postman)
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With']
 }));
 
-// API endpoints
-app.get('/hello', (req, res) => {
-  console.log("Hello endpoint hit");
-  res.send('Hello World!');
-});
-
+// Handlers
+app.get('/hello', (req, res) => res.send('Hello World!'));
 app.use('/api/auth', authRoutes);
 app.use('/api/user', userRouter);
 
-app.listen(PORT, () => {
-  console.log(`Server is running on port ${PORT}`);
-});
+app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
