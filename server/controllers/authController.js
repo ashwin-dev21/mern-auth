@@ -3,7 +3,7 @@ import jwt from 'jsonwebtoken';
 import userModel from '../models/userModel.js';
 import dotenv from 'dotenv/config';
 import axios from 'axios';
-import transporter from '../config/nodemailer.js'; // Updated import
+import { sendEmail } from '../config/nodemailer.js';
 
 /* =========================
    REGISTER
