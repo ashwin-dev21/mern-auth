@@ -1,28 +1,35 @@
-import nodemailer from "nodemailer";
-import "dotenv/config";
+import 'dotenv/config';
 
-const transporter = nodemailer.createTransport({
-    host: "smtp-relay.brevo.com",
-    port: 587,
-    secure: false,
+export const sendEmail = async ({ to, subject, htmlContent }) => {
+  try {
+    const response = await fetch('https://api.brevo.com/v3/smtp/email', {
+      method: 'POST',
+      headers: {
+        'accept': 'application/json',
+        'api-key': process.env.BREVO_API_KEY,
+        'content-type': 'application/json',
+      },
+      body: JSON.stringify({
+        sender: { 
+          name: 'Your App Name', 
+          email: process.env.SENDER_EMAIL 
+        },
+        to: [{ email: to }],
+        subject: subject,
+        htmlContent: htmlContent,
+      }),
+    });
 
-    auth: {
-        user: process.env.SMTP_USER,
-        pass: process.env.SMTP_PASS,
-    },
+    const data = await response.json();
 
-    connectionTimeout: 10000,
-    greetingTimeout: 10000,
-    socketTimeout: 15000,
-});
-
-transporter.verify((error, success) => {
-    if (error) {
-        console.error("SMTP CONNECTION ERROR:");
-        console.error(error);
-    } else {
-        console.log("SMTP SERVER READY");
+    if (!response.ok) {
+      throw new Error(`Brevo Error: ${JSON.stringify(data)}`);
     }
-});
 
-export default transporter;
+    console.log('EMAIL SENT SUCCESSFULLY:', data);
+    return data;
+  } catch (error) {
+    console.error('EMAIL SENDING ERROR:', error);
+    throw error;
+  }
+};
