@@ -3,7 +3,7 @@ import jwt from 'jsonwebtoken';
 import userModel from '../models/userModel.js';
 import dotenv from 'dotenv/config';
 import axios from 'axios';
-import transporter from '../config/nodemailer.js';
+import transporter from '../config/nodemailer.js'; // Updated import
 
 /* =========================
    REGISTER
@@ -42,9 +42,9 @@ export const register = async (req, res) => {
 
         res.cookie('token', token, {
             httpOnly: true,
-            secure: process.env.NODE_ENV === 'production', // false in local dev
-            sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'strict',
-            maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
+            secure: isProduction,
+            sameSite: isProduction ? 'none' : 'lax', // Matched with login/logout
+            maxAge: 7 * 24 * 60 * 60 * 1000
         });
 
         return res.status(201).json({
@@ -99,10 +99,11 @@ export const login = async (req, res) => {
 
         res.cookie('token', token, {
             httpOnly: true,
-            secure: process.env.NODE_ENV === 'production', 
-            sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax', // Use 'lax' on localhost
+            secure: isProduction, 
+            sameSite: isProduction ? 'none' : 'lax',
             maxAge: 7 * 24 * 60 * 60 * 1000
         });
+
         return res.status(200).json({
             success: true,
             message: "Login successful"
@@ -118,15 +119,12 @@ export const login = async (req, res) => {
 
 
 /* =========================
-   LOGOUT (frontend handles token removal)
+   LOGOUT
 ========================= */
 export const logout = async (req, res) => {
     try {
         const isProduction = process.env.NODE_ENV === "production";
 
-        // 1. Use clearCookie instead of res.cookie
-        // 2. Pass 'token' as a string literal
-        // 3. Match the sameSite settings used during login ('lax' for local dev)
         res.clearCookie('token', {
             httpOnly: true,
             secure: isProduction,
@@ -145,12 +143,13 @@ export const logout = async (req, res) => {
         });
     }
 };
+
+
 /* =========================
    SEND VERIFY OTP
 ========================= */
 export const sendVerifyOtp = async (req, res) => {
     try {
-        // Matches req.userId attached by your userAuth middleware
         const userId = req.userId;
 
         if (!userId) {
@@ -176,11 +175,10 @@ export const sendVerifyOtp = async (req, res) => {
             });
         }
 
-        // Generate 6-digit OTP
         const otp = String(Math.floor(100000 + Math.random() * 900000));
 
         user.verifyOtp = otp;
-        user.verifyOtpExpireAt = Date.now() + 24 * 60 * 60 * 1000; // 24 Hours validity
+        user.verifyOtpExpireAt = Date.now() + 24 * 60 * 60 * 1000;
 
         await user.save();
 
@@ -205,11 +203,12 @@ export const sendVerifyOtp = async (req, res) => {
         });
     }
 };
+
+
 /* =========================
    VERIFY EMAIL
 ========================= */
 export const verifyEmail = async (req, res) => {
-    // Read otp from body, and userId directly from req.userId
     const { otp } = req.body;
     const userId = req.userId;
 
