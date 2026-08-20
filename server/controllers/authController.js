@@ -189,7 +189,11 @@ export const sendVerifyOtp = async (req, res) => {
             text: `Your verification OTP is ${otp}. Use this code to verify your account.`
         };
 
-        await transporter.sendMail(mailOptions);
+            await sendEmail({
+             to: user.email,
+             subject: "Account Verification OTP",
+             htmlContent: `<h1>Your verification OTP is ${otp}</h1>`
+            });
 
         return res.status(200).json({
             success: true,
@@ -304,11 +308,10 @@ export const sendResetOtp = async (req, res) => {
 
         await user.save();
 
-        await transporter.sendMail({
-            from: process.env.SENDER_EMAIL,
+        await sendEmail({
             to: email,
-            subject: 'Password Reset OTP',
-            text: `Your OTP is ${otp}`
+            subject: "Password Reset OTP",
+            htmlContent: `<h1>Your reset OTP is ${otp}</h1>`
         });
 
         return res.status(200).json({
